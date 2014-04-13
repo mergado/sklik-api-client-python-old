@@ -1,38 +1,48 @@
 
+import sys
+
 from errors import SklikApiError, AuthenticationError, ArgumentError
-from xmlrpclib import ServerProxy
 from methods import AdMethods, CampaignMethods, ClientMethods, \
                     ConversionMethods, GroupMethods, KeywordMethods, \
                     MiscMethods
 
+# gevent compatibility
+if 'gevent' in sys.modules:
+    from gevent.local import local
+    class XmlRpcProxy(ServerProxy, local):
+        """Subclass of :class:`ServerProxy` where each instance
+        is used across all greenlets."""
+
+else:
+    from xmlrpclib import ServerProxy as XmlRpcProxy
+
+
 class Client(AdMethods, CampaignMethods, ClientMethods, \
              ConversionMethods, GroupMethods, KeywordMethods, \
              MiscMethods):
-    """Sklik API client class
-    """
+    """Sklik API client class."""
 
     __slots__ = ["__config", "__proxy", "__session"]
 
-    def __init__(self, config = None):
-        """Creates new Sklik API client instance
+    def __init__(self, config=None):
+        """Creates new Sklik API client instance.
 
-        Keyword arguments:
-
-            config: sklik API client configuration instance
+        :param config: Sklik API client configuration instance
         """
 
         self.__session = None
 
         if not config:
             raise SklikApiError("No config given")
-        #endif
-        self.__config = config
 
-        self.__proxy = ServerProxy(self.__config.namespace, allow_none = True)
+        self.__proxy = XmlRpcProxy(
+            config.namespace,
+            verbose=config.debug,
+            allow_none=True)
 
         res = self.__proxy.client.login(
-            self.__config.username,
-            self.__config.password)
+            config.username,
+            config.password)
 
         if res["status"] == 400:
             raise ArgumentError(res["statusMessage"], res["errors"])
@@ -40,18 +50,14 @@ class Client(AdMethods, CampaignMethods, ClientMethods, \
             raise AuthenticationError(res["statusMessage"])
         elif res["status"] != 200:
             raise SklikApiError(res["statusMessage"])
-        #endif
 
         self.__session = res["session"]
-    #enddef
 
     def __del__(self):
-        """Logs out
-        """
+        """Logs out."""
 
         if self.__session == None:
             return
-        #endif
 
         res = self.__proxy.client.logout(self.__session)
 
@@ -61,6 +67,3 @@ class Client(AdMethods, CampaignMethods, ClientMethods, \
             raise AuthenticationError(res["statusMessage"])
         elif res["status"] != 200:
             raise SklikApiError(res["statusMessage"])
-        #endif
-    #enddef
-#endclass
