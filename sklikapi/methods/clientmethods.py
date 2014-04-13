@@ -60,12 +60,28 @@ class ForeignAccount(object):
         "userId",
         "username",
         "access",
+        "relationName",
+        "relationStatus",
+        "relationType",
+        "walletCredit",
+        "walletCreditWithVat",
+        "walletVerified",
+        "accountLimit",
+        "dayBudgetSum",
     ]
 
     def __init__(self):
         self.userId = None
         self.username = None
         self.access = None
+        self.relationName = None
+        self.relationStatus = None
+        self.relationType = None
+        self.walletCredit = None
+        self.walletCreditWithVat = None
+        self.walletVerified = None
+        self.accountLimit = None
+        self.dayBudgetSum = None
     #enddef
 #endclass
 

@@ -10,6 +10,8 @@ class Campaign(object):
 
         name: campaign name
 
+        removed: whether campaign is deleted
+
         dayBudget: campaign day budget
 
         excludedUrls: exlcluded websites
@@ -31,10 +33,14 @@ class Campaign(object):
         context: whether show in context
 
         regions: campaign regions
+
+        userId: user id of campaign owner
+                (if creating campaign in a foreign account)
     """
     __slots__ = [
         "id",
         "name",
+        "removed",
         "dayBudget",
         "excludedUrls",
         "excludedSearchServices",
@@ -46,6 +52,7 @@ class Campaign(object):
         "status",
         "context",
         "regions",
+        "userId",
     ]
 
     def __init__(self):
@@ -164,8 +171,12 @@ class CampaignMethods(Methods):
 
         Returns campaign ID
         """
-        res = self._Client__proxy.campaign.create(
-            self._Client__session, attributes)
+        if attributes['userId'] is None:
+            res = self._Client__proxy.campaign.create(
+                self._Client__session, attributes)
+        else:
+            res = self._Client__proxy.campaign.create(
+                self._Client__session, attributes, attributes['userId'])
 
         self.checkResult(res)
         return res["campaignId"]
