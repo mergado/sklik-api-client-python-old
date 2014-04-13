@@ -34,6 +34,12 @@ class ArgumentError(SklikApiError):
     def errors(self):
         return self.__errors
     #enddef
+
+    def __str__(self):
+        s = super(ArgumentError, self).__str__()
+        return '; '.join([s] + self.__errors)
+    #enddef
+
 #endclass
 
 class InvalidDataError(SklikApiError):
@@ -49,6 +55,11 @@ class InvalidDataError(SklikApiError):
 
     def errors(self):
         return self.__errors
+    #enddef
+
+    def __str__(self):
+        s = super(InvalidDataError, self).__str__()
+        return '; '.join([s] + [e['id'] for e in self.__errors])
     #enddef
 #endclass
 
