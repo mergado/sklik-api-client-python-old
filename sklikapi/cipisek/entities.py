@@ -10,6 +10,14 @@ class Missing(object):
     def __str__(self):
         return "Missing"
 
+    # python2
+    def __nonzero__(self):
+        return False
+
+    # python3
+    def __bool__(self):
+        return False
+
 Missing = Missing()
 
 
@@ -23,9 +31,38 @@ class Entity(object):
 
     __slots__ = []
 
-    def __init__(self, **kwargs):
+    """Attributes which contains lists of other entities and should be
+    automatically converted to instances of entity type. Keys are
+    attribute names and values are target class objects
+    (or conversion functions).
+    """
+    _entity_list_attributes = {}
+
+    @classmethod
+    def marshall_list(cls, src_list):
+        """Converts iterable of dicts/entites to list of instances
+        of this class type
+        """
+        return [
+            item if isinstance(item, cls) else cls(item)
+            for item in src_list
+        ]
+
+    def __init__(self, source=None, **kwargs):
+        if source:
+            if isinstance(source, type(self)):
+                for key, val in source:
+                    kwargs[key] = val
+            elif isinstance(source, dict):
+                kwargs.update(source)
+
         for key in self._get_slots():
             setattr(self, key, kwargs.get(key, Missing))
+
+        for key, cls in self._entity_list_attributes.items():
+            val = getattr(self, key)
+            if val:
+                setattr(self,key, cls.marshall_list(val))
 
     def __iter__(self):
         return self.iterate_non_missing()
@@ -41,6 +78,14 @@ class Entity(object):
     def  __ne__(self, other):
         return not self.__eq__(other)
 
+    def __repr__(self):
+        vals = ['%s=%s' % (key, repr(getattr(self, key)))
+                for key in self._get_slots()]
+        return '<' + self.__class__.__name__ + ': ' + ', '.join(vals) + '>'
+
+    def __str__(self):
+        return repr(self)
+
     def _get_slots(self):
         """Returns all keys from __slots__  of all parent classes."""
         return chain.from_iterable(getattr(cls, '__slots__', [])
@@ -48,7 +93,7 @@ class Entity(object):
 
     def iterate_all(self):
         """Iterate over all values."""
-        return ((key, getattr(self, key, Missing))
+        return ((key, getattr(self, key))
                 for key in self._get_slots())
 
     def iterate_non_missing(self):
@@ -59,6 +104,44 @@ class Entity(object):
 
 
 class Ad(Entity):
+    """Ad entity. Properties are:
+    - `id`
+    - `groupId` - AdGroup ID this ad belongs to
+    - `creative1` - ad headline
+    - `creative2` - ad first line
+    - `creative3` - ad second line
+    - `clickthruText` - displayed URL
+    - `clickthruUrl` - target URL
+    - `status` - either "active" or "suspend"
+    - `createDate`
+    - `premiseMode` - for connection with Firmy.cz
+    - `premiseId` - for connection with Firmy.cz
+    """
     __slots__ = ['id', 'groupId', 'creative1', 'creative2', 'creative3',
                  'clickthruText', 'clickthruUrl', 'status', 'createDate',
                  'premiseMode', 'premiseId']
+
+
+class Keyword(Entity):
+    """Keyword entity.
+    """
+    __slots__ = ['keywordId', 'groupId', 'name', 'matchType', 'removed',
+                 'status', 'disabled', 'cpc', 'url',
+                 'createDate', 'minCpc']
+
+
+class Campaign(Entity):
+    """Campaign entity.
+    """
+    __slots__ = ['campaignId', 'name', 'deleted', 'status', 'dayBudget',
+                 'exhaustedDayBudget', 'adSelection', 'startDate', 'endDate',
+                 'createDate', 'fulltext', 'context', 'excludedSearchServices',
+                 'excludedUrls', 'negativeKeywords', 'userId', 'totalBudget',
+                 'exhaustedTotalBudget', 'totalClicks', 'exhaustedTotalClicks',
+                 'paymentMethod', 'regions', 'premiseId']
+
+    _entity_list_attributes = {
+        'negativeKeywords': Keyword,
+    }
+
+

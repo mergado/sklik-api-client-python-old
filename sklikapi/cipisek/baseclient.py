@@ -1,8 +1,10 @@
 import sys
 import logging
 import xmlrpclib
+from warnings import warn
 
 from .exceptions import *
+from .marshalling import marshall_param, marshall_result
 
 
 _logger = logging.getLogger('sklikapi')
@@ -36,11 +38,10 @@ class BaseClient(object):
         if not username or not password:
             raise Exception('Username and password must not be empty')
 
-        self.__proxy = XmlRpcProxy(
+        self._proxy = XmlRpcProxy(
             url,
             verbose=debug,
-            allow_none=True,
-            use_datetime=True)
+            allow_none=True)
 
         versionName, versionNumber = self.get_version()
         _logger.debug('Sklik API version %s %s', versionName, versionNumber)
@@ -50,7 +51,7 @@ class BaseClient(object):
                 'Only API version "cipisek" is supported.'
             )
 
-        res = self.__proxy.client.login(username, password)
+        res = self._proxy.client.login(username, password)
         self._check_login_result(res)
         self.__session = res["session"]
 
@@ -60,7 +61,7 @@ class BaseClient(object):
         if self.__session == None:
             return
 
-        res = self.__proxy.client.logout(self.__session)
+        res = self._proxy.client.logout(self.__session)
         self._check_login_result(res)
 
     def work_with_user(self, user_id):
@@ -72,7 +73,7 @@ class BaseClient(object):
 
         :return: tuple (versionName, versionNumber)
         """
-        res = self.__proxy.api.version()
+        res = self._proxy.api.version()
         self._check_result(res)
         return res['versionName'], res['versionNumber']
 
@@ -81,7 +82,7 @@ class BaseClient(object):
 
         :return: tuple (versionName, versionNumber)
         """
-        res = self.__proxy.api.limits(self._get_user_struct())
+        res = self._proxy.api.limits(self._get_user_struct())
         self._check_result(res)
         return dict((x['id'], x['limit']) for x in res['limits'])
 
@@ -90,6 +91,14 @@ class BaseClient(object):
         if self.__user_id:
             struct['userId'] = self.__user_id
         return struct
+
+    def _marshalled_call(self, method, *args, **kwargs):
+        args = (self._get_user_struct(),) + marshall_param(args)
+        kwargs = marshall_param(kwargs)
+        method = getattr(self._proxy, method)
+        result = marshall_result(method(*args, **kwargs))
+        self._check_result(result)
+        return result
 
     def _check_login_result(self, res):
         if res["status"] == 400:
@@ -102,12 +111,11 @@ class BaseClient(object):
     def _check_result(self, res):
         if "session" in res:
             self.__session = res["session"]
-        #endif
 
         if res["status"] == 200:
             return
         elif res["status"] == 400:
-            raise ArgumentError(res["statusMessage"], res.get("errors"))
+            raise ArgumentError(res["statusMessage"], res.get("diagnostics"))
         elif res["status"] == 401:
             raise SessionError(res["statusMessage"])
         elif res["status"] == 403:
@@ -115,7 +123,7 @@ class BaseClient(object):
         elif res["status"] == 404:
             raise NotFoundError(res["statusMessage"])
         elif res["status"] == 406:
-            raise InvalidDataError(res["status"], res["errors"])
+            raise InvalidDataError(res["status"], res.get("diagnostics"))
         elif res["status"] == 206:
             warn(res["statusMessage"], SklikApiWarning)
             return

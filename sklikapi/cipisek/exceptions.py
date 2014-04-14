@@ -32,7 +32,7 @@ class ArgumentError(SklikApiError):
 
     def __str__(self):
         s = super(ArgumentError, self).__str__()
-        return '; '.join([s] + self.__errors)
+        return '; '.join([s] + [e['problemMessage'] for e in self.__errors['problems']])
 
 
 class InvalidDataError(SklikApiError):

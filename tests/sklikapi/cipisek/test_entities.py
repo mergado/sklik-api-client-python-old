@@ -2,8 +2,6 @@ import unittest
 
 from sklikapi.cipisek.entities import Entity, Missing
 
-from . import SKLIK_LOGIN, SKLIK_PASSWORD, SKLIK_BAJAJA_URL, SKLIK_CIPISEK_URL
-
 
 class MockEntity(Entity):
     __slots__ = ['a', 'b', 'c', 'd']
