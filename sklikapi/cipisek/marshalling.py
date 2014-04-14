@@ -6,6 +6,11 @@ from .entities import Missing
 
 
 def marshall_param(obj_type, data):
+    """Converts all `obj_type` instances to dicts, recursively.
+    Dicts, lists, and tuples are kept, generators are wrapped by
+    `itertools.imap`. Other data types are left as-is.
+    """
+
     if isinstance(data, obj_type):
         return dict((k, marshall_param(obj_type, v))
                     for (k, v) in data)
@@ -28,6 +33,11 @@ def marshall_param(obj_type, data):
 
 
 def marshall_result(obj_type, data):
+    """Converts all dicts to `obj_type`.
+    Lists and tuples are kept, generators are wrapped by
+    `itertools.imap`. Other data types are left as-is.
+    """
+
     if isinstance(data, dict):
         kwargs = dict((k, marshall_result(obj_type, v))
                       for (k, v) in data.iteritems())
@@ -39,11 +49,18 @@ def marshall_result(obj_type, data):
     elif isinstance(data, tuple):
         return tuple(map(partial(marshall_result, obj_type), data))
 
+    elif isinstance(data, GeneratorType):
+        return imap(partial(marshall_result, obj_type), data)
+
     else:
         return data
 
 
 def marshall(obj_type):
+    """Decorator which automatically marshalles arguments and function
+    result using `marshall_param` and `marshall_result` functions.
+    """
+
     def wrapper(func):
         @wraps(func)
         def marshaller(*args, **kwargs):

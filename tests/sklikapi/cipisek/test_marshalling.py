@@ -47,11 +47,36 @@ class MarshallingTest(unittest.TestCase):
             marshalled = marshall_result(MockEntity, data)
             self.assertEqual(marshalled, expected)
 
-    def test_marshall_generator(self):
-        data = (MockEntity(**self.values) for _ in xrange(2))
+    def test_marshall_generator_param(self):
+        data = (self._get_entity() for _ in xrange(2))
         expected = [self.values for _ in xrange(2)]
 
         marshalled = marshall_param(MockEntity, data)
+        self.assertEqual(list(marshalled), expected)
+
+    def test_marshall_generator_result(self):
+        data = (self.values for _ in xrange(2))
+        expected = [self._get_entity() for _ in xrange(2)]
+
+        marshalled = marshall_result(MockEntity, data)
+        self.assertEqual(list(marshalled), expected)
+
+    def test_marshall_generator_function_param(self):
+        def data():
+            yield self._get_entity()
+            yield self._get_entity()
+        expected = [self.values for _ in xrange(2)]
+
+        marshalled = marshall_param(MockEntity, data())
+        self.assertEqual(list(marshalled), expected)
+
+    def test_marshall_generator_function_result(self):
+        def data():
+            yield self.values
+            yield self.values
+        expected = [self._get_entity() for _ in xrange(2)]
+
+        marshalled = marshall_result(MockEntity, data())
         self.assertEqual(list(marshalled), expected)
 
     def test_marshall_decorator(self):

@@ -17,8 +17,8 @@ class Entity(object):
     """Base class for all sklik entities.
 
     Can be easily converted to dict just by using `dict(entity)`.
-    If you want to exclude args equal to <Missing>, use `entity.to_dict()`
-
+    If you want to include args equal to <Missing>, you can use
+    `dict(entity.iterate_all())`
     """
 
     __slots__ = []
