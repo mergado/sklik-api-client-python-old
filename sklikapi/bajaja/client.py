@@ -8,6 +8,7 @@ from methods import AdMethods, CampaignMethods, ClientMethods, \
 
 # gevent compatibility
 if 'gevent' in sys.modules:
+    from xmlrpclib import ServerProxy
     from gevent.local import local
     class XmlRpcProxy(ServerProxy, local):
         """Subclass of :class:`ServerProxy` where each instance
