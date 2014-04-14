@@ -5,27 +5,18 @@ class Ad(object):
     """Ad class
 
     Attributes:
-
         id: ad ID
-
         creative1: ad title
-
         creative2: ad line 1
-
         creative3: ad line 2
-
         clickthruUrl: destination URL
-
         clickthruText: visible URL
-
         removed: whether is removed
-
         status: ad status
-
         created: creation date
-
         groupId: group ID
     """
+
     __slots__ = [
         "id",
         "creative1",
@@ -42,27 +33,20 @@ class Ad(object):
     def __init__(self):
         for attr in self.__slots__:
             setattr(self, attr, Missing)
-        #endfor
-    #enddef
-#endclass
+
 
 class AdStat(object):
     """Ad stat class
 
     Attributes:
-
         conversions: conversion count
-
         transactions: transaction count
-
         money: money sum
-
         avgPosition: average position
-
         impressions: impression count
-
         clicks: click count
     """
+
     __slots__ = [
         "conversions",
         "transactions",
@@ -79,12 +63,11 @@ class AdStat(object):
         self.avgPosition = 0
         self.impressions = 0
         self.clicks = 0
-    #enddef
-#endclass
+
 
 class AdMethods(Methods):
     @convert(Ad)
-    def checkAd(self, attributes):
+    def check_ad(self, attributes):
         """Checks ad attributes
 
         Arguments:

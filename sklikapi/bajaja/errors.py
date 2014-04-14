@@ -1,92 +1,72 @@
-
 class SklikApiError(Exception):
-    """Base Sklik API error exception class
-    """
-
+    """Base Sklik API error exception"""
     pass
-#endclass
+
 
 class SklikApiWarning(Warning):
-    """Base Sklik API warning exception class
-    """
-
+    """Base Sklik API warning exception"""
     pass
-#endclass
+
+
+class IncompatibleApiVersionError(SklikApiError):
+    """Sklik API has incompatible version error exception"""
+    pass
+
 
 class NotFoundError(SklikApiError):
-    """Sklik API not found error exception
-    """
-
+    """Sklik API not found error exception"""
     pass
-#endclass
+
 
 class ArgumentError(SklikApiError):
-    """Sklik API argument error exception
-    """
+    """Sklik API argument error exception"""
 
     __slots__ = ["__errors"]
 
     def __init__(self, message, errors):
         SklikApiError.__init__(self, message)
         self.__errors = errors
-    #enddef
 
     def errors(self):
         return self.__errors
-    #enddef
 
     def __str__(self):
         s = super(ArgumentError, self).__str__()
         return '; '.join([s] + self.__errors)
-    #enddef
 
-#endclass
 
 class InvalidDataError(SklikApiError):
-    """Sklik API invalid data error exception
-    """
+    """Sklik API invalid data error exception"""
 
     __slots__ = ["__errors"]
 
     def __init__(self, message, errors):
         SklikApiError.__init__(self, message)
         self.__errors = errors
-    #enddef
 
     def errors(self):
         return self.__errors
-    #enddef
 
     def __str__(self):
         s = super(InvalidDataError, self).__str__()
         return '; '.join([s] + [e['id'] for e in self.__errors])
-    #enddef
-#endclass
+
 
 class AuthenticationError(SklikApiError):
-    """Sklik API authentication error exception
-    """
-
+    """Sklik API authentication error exception"""
     pass
-#endclass
+
 
 class SessionError(SklikApiError):
-    """Sklik API session error exception
-    """
-
+    """Sklik API session error exception"""
     pass
-#endclass
+
 
 class AccessError(SklikApiError):
-    """Skik API access error exception
-    """
-
+    """Skik API access error exception"""
     pass
-#endclass
+
 
 class NoActionWarning(SklikApiWarning):
-    """Sklik API no action error exception
-    """
-
+    """Sklik API no action error exception"""
     pass
-#endclass
