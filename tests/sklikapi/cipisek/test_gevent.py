@@ -2,11 +2,11 @@ import sys
 import unittest
 
 try:
-    import gevent
+    from gevent.local import local
 except ImportError:
     pass
 
-from sklikapi.cipisek.baseclient import XmlRpcProxy
+from sklikapi.cipisek.baseclient import _create_server_proxy
 
 from . import SKLIK_CIPISEK_URL
 
@@ -15,4 +15,4 @@ from . import SKLIK_CIPISEK_URL
 class GeventTest(unittest.TestCase):
 
     def test_gevent_imports(self):
-        self.assertIsInstance(XmlRpcProxy(SKLIK_CIPISEK_URL), gevent.local.local)
+        self.assertIsInstance(_create_server_proxy(SKLIK_CIPISEK_URL), local)

@@ -2,6 +2,7 @@ import sys
 import logging
 import xmlrpclib
 from warnings import warn
+from xmlrpclib import ServerProxy
 
 from .exceptions import *
 from .marshalling import marshall_param, marshall_result
@@ -11,15 +12,16 @@ _logger = logging.getLogger('sklikapi')
 
 
 # gevent compatibility
-if 'gevent' in sys.modules:
-    from xmlrpclib import ServerProxy
-    from gevent.local import local
-    class XmlRpcProxy(ServerProxy, local):
-        """Subclass of :class:`ServerProxy` where each instance
-        is used across all greenlets."""
+def _create_server_proxy(*args, **kwargs):
+    if 'gevent' in sys.modules:
+        from gevent.local import local
+        class GeventServerProxy(ServerProxy, local):
+            """Subclass of :class:`ServerProxy` where each instance
+            is used across all greenlets."""
+        return GeventServerProxy(*args, **kwargs)
 
-else:
-    from xmlrpclib import ServerProxy as XmlRpcProxy
+    else:
+        return ServerProxy(*args, **kwargs)
 
 
 class BaseClient(object):
@@ -39,10 +41,7 @@ class BaseClient(object):
         if not username or not password:
             raise Exception('Username and password must not be empty')
 
-        self._proxy = XmlRpcProxy(
-            url,
-            verbose=debug,
-            allow_none=True)
+        self._proxy = _create_server_proxy(url, verbose=debug, allow_none=True)
 
         versionName, versionNumber = self.get_version()
         _logger.debug('Sklik API version %s %s', versionName, versionNumber)

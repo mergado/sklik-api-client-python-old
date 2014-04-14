@@ -1,5 +1,6 @@
 
 import sys
+from xmlrpclib import ServerProxy
 
 from errors import SklikApiError, AuthenticationError, ArgumentError
 from methods import AdMethods, CampaignMethods, ClientMethods, \
@@ -7,15 +8,16 @@ from methods import AdMethods, CampaignMethods, ClientMethods, \
                     MiscMethods
 
 # gevent compatibility
-if 'gevent' in sys.modules:
-    from xmlrpclib import ServerProxy
-    from gevent.local import local
-    class XmlRpcProxy(ServerProxy, local):
-        """Subclass of :class:`ServerProxy` where each instance
-        is used across all greenlets."""
+def _create_server_proxy(*args, **kwargs):
+    if 'gevent' in sys.modules:
+        from gevent.local import local
+        class GeventServerProxy(ServerProxy, local):
+            """Subclass of :class:`ServerProxy` where each instance
+            is used across all greenlets."""
+        return GeventServerProxy(*args, **kwargs)
 
-else:
-    from xmlrpclib import ServerProxy as XmlRpcProxy
+    else:
+        return ServerProxy(*args, **kwargs)
 
 
 class Client(AdMethods, CampaignMethods, ClientMethods, \
@@ -36,7 +38,7 @@ class Client(AdMethods, CampaignMethods, ClientMethods, \
         if not config:
             raise SklikApiError("No config given")
 
-        self.__proxy = XmlRpcProxy(
+        self.__proxy = _create_server_proxy(
             config.namespace,
             verbose=config.debug,
             allow_none=True)
