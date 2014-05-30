@@ -61,7 +61,7 @@ class BaseClient(object):
         if self.__session == None:
             return
 
-        res = self._proxy.client.logout(self.__session)
+        res = self._proxy.client.logout({'session': self.__session})
         self._check_login_result(res)
 
     def work_with_user(self, user_id):
@@ -84,7 +84,7 @@ class BaseClient(object):
         """
         res = self._proxy.api.limits(self._get_user_struct())
         self._check_result(res)
-        return dict((x['id'], x['limit']) for x in res['limits'])
+        return res['limits']
 
     def _get_user_struct(self):
         struct = {'session': self.__session}
@@ -102,7 +102,7 @@ class BaseClient(object):
 
     def _check_login_result(self, res):
         if res["status"] == 400:
-            raise ArgumentError(res["statusMessage"], res["errors"])
+            raise ArgumentError(res["statusMessage"], res["problems"])
         elif res["status"] in [301, 401]:
             raise AuthenticationError(res["statusMessage"])
         elif res["status"] != 200:

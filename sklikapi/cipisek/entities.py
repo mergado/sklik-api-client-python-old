@@ -125,15 +125,37 @@ class Ad(Entity):
 class Keyword(Entity):
     """Keyword entity.
     """
-    __slots__ = ['keywordId', 'groupId', 'name', 'matchType', 'removed',
+    __slots__ = ['id', 'groupId', 'name', 'matchType', 'removed',
                  'status', 'disabled', 'cpc', 'url',
                  'createDate', 'minCpc']
+
+
+class Group(Entity):
+    """Group entity. Properties are:
+    - int   campaignId  Campaign id
+    - str   name        Group name
+    - int   cpc         Group default maximal cost per click
+                        (in halers)
+    - int   cpcContext  Group default maximal cost per click for
+                        context (in halers)
+    - int   cpm         (optional) Group cost per thousand impressions,
+                        only if is campaign's payment method set as CPM
+                        (in halers)
+    - str   status      (optional) status of group (default active):
+                        active: active state
+                        suspend: suspend state
+    - int maxUserDailyImpression
+                        (optional) Max impressions of group per one
+                        user per one day
+    """
+    __slots__ = ['id', 'campaignId', 'name', 'cpc', 'cpcContext', 'cpm',
+                 'status', 'maxUserDailyImpression']
 
 
 class Campaign(Entity):
     """Campaign entity.
     """
-    __slots__ = ['campaignId', 'name', 'deleted', 'status', 'dayBudget',
+    __slots__ = ['id', 'name', 'deleted', 'status', 'dayBudget',
                  'exhaustedDayBudget', 'adSelection', 'startDate', 'endDate',
                  'createDate', 'fulltext', 'context', 'excludedSearchServices',
                  'excludedUrls', 'negativeKeywords', 'userId', 'totalBudget',

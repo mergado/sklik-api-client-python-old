@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime
 
-from sklikapi.cipisek.entities import Entity, Campaign, Keyword
+from sklikapi.cipisek.entities import Campaign, Keyword
 from sklikapi.cipisek.campaigns import CampaignsClient
 from sklikapi.cipisek.exceptions import InvalidDataError
 from sklikapi.cipisek.marshalling import marshall_param
@@ -75,7 +75,7 @@ class CampaignsTest(unittest.TestCase):
         # 5) update
         campaign = Campaign(self.campaign)
         campaign.dayBudget = 20000
-        campaign.campaignId = ids[0]
+        campaign.id = ids[0]
         c.update_campaigns([campaign])
 
         # 6) check equality
