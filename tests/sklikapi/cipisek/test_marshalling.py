@@ -1,10 +1,11 @@
-import unittest
 from datetime import datetime
 from xmlrpclib import DateTime
 
 from sklikapi.cipisek.entities import Entity
 from sklikapi.cipisek.marshalling import (marshall_param, marshall_result,
                                           marshall)
+
+from . import unittest
 
 
 class MockEntity(Entity):

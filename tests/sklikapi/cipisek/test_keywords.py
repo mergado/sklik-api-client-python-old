@@ -1,4 +1,3 @@
-import unittest
 from datetime import datetime
 
 from sklikapi.cipisek.groups import GroupsClient
@@ -8,6 +7,7 @@ from sklikapi.cipisek.campaigns import CampaignsClient
 from sklikapi.cipisek.exceptions import InvalidDataError
 from sklikapi.cipisek.marshalling import marshall_param
 
+from . import unittest
 from . import only_with_login, get_client
 
 class KeywordsTest(unittest.TestCase):
@@ -78,6 +78,8 @@ class KeywordsTest(unittest.TestCase):
 
         # 1) create
         ids = c.create_keywords([keyword])
+        existing = len(c.list_keywords(groups=[group_id]))
+        self.assertEqual(existing, 1)
 
         # 2) check equality
         from_api = c.get_keywords(ids)[0]
@@ -86,9 +88,13 @@ class KeywordsTest(unittest.TestCase):
 
         # 3) delete
         c.remove_keywords(ids)
+        existing2 = len(c.list_keywords(groups=[group_id]))
+        self.assertEqual(0, existing2)
 
         # 4) restore
         c.restore_keywords(ids)
+        existing3 = len(c.list_keywords(groups=[group_id]))
+        self.assertEqual(1, existing3)
 
         # 5) update
         keyword = Keyword(self.keyword)

@@ -4,6 +4,21 @@ from .baseclient import BaseClient
 class AdsClient(BaseClient):
     """Sklik API ads namespace client."""
 
+    def list_ads(self, campaigns=None, groups=None, include_deleted=False):
+        filter = {
+            'includeDeleted': bool(include_deleted),
+        }
+        display = {}
+        if campaigns and groups:
+            raise Exception('Cannot filter both by campaigns and groups')
+        elif campaigns:
+            filter['campaignIds'] = list(campaigns)
+            display['showCampaignId'] = True
+        elif groups:
+            filter['groupIds'] = list(groups)
+        result = self._marshalled_call('ads.list', filter, display)
+        return Ad.marshall_list(result['ads'])
+
     def create_ads(self, ads):
         result = self._marshalled_call('ads.create', list(ads))
         return result["adIds"]

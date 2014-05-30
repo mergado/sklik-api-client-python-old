@@ -1,4 +1,3 @@
-import unittest
 from datetime import datetime
 
 from sklikapi.cipisek.ads import AdsClient
@@ -8,6 +7,7 @@ from sklikapi.cipisek.campaigns import CampaignsClient
 from sklikapi.cipisek.exceptions import InvalidDataError
 from sklikapi.cipisek.marshalling import marshall_param
 
+from . import unittest
 from . import only_with_login, get_client
 
 class AdsTest(unittest.TestCase):
@@ -95,6 +95,8 @@ class AdsTest(unittest.TestCase):
 
         # 1) create
         ids = c.create_ads([ad])
+        existing = len(c.list_ads(groups=[group_id]))
+        self.assertEqual(existing, 1)
 
         # 2) check equality
         from_api = c.get_ads(ids)[0]
@@ -103,9 +105,13 @@ class AdsTest(unittest.TestCase):
 
         # 3) delete
         c.remove_ads(ids)
+        existing2 = len(c.list_ads(groups=[group_id]))
+        self.assertEqual(0, existing2)
 
         # 4) restore
         c.restore_ads(ids)
+        existing3 = len(c.list_ads(groups=[group_id]))
+        self.assertEqual(1, existing3)
 
         # 5) update
         ad = Ad(self.ad)

@@ -1,7 +1,6 @@
-import unittest
-
 from sklikapi.cipisek.entities import Entity, Missing
 
+from . import unittest
 
 class MockEntity(Entity):
     __slots__ = ['a', 'b', 'c', 'd']

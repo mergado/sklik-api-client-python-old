@@ -4,6 +4,14 @@ from .baseclient import BaseClient
 class GroupsClient(BaseClient):
     """Sklik API groups namespace client."""
 
+    def list_groups(self, campaigns=None, include_deleted=False):
+        filter = {
+            'campaignIds': list(campaigns or []),
+            'includeDeleted': bool(include_deleted),
+        }
+        result = self._marshalled_call('groups.list', filter)
+        return Group.marshall_list(result['groups'])
+
     def create_groups(self, groups):
         result = self._marshalled_call('groups.create', list(groups))
         return result["groupIds"]

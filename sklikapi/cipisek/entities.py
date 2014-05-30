@@ -116,16 +116,18 @@ class Ad(Entity):
     - `createDate`
     - `premiseMode` - for connection with Firmy.cz
     - `premiseId` - for connection with Firmy.cz
+    - `deleted`
+    - `deletedDate`
     """
     __slots__ = ['id', 'groupId', 'creative1', 'creative2', 'creative3',
                  'clickthruText', 'clickthruUrl', 'status', 'createDate',
-                 'premiseMode', 'premiseId']
+                 'premiseMode', 'premiseId', 'deleted', 'deletedDate']
 
 
 class Keyword(Entity):
     """Keyword entity.
     """
-    __slots__ = ['id', 'groupId', 'name', 'matchType', 'removed',
+    __slots__ = ['id', 'groupId', 'name', 'matchType', 'deleted',
                  'status', 'disabled', 'cpc', 'url',
                  'createDate', 'minCpc']
 
@@ -147,9 +149,10 @@ class Group(Entity):
     - int maxUserDailyImpression
                         (optional) Max impressions of group per one
                         user per one day
+    - bool deleted      Whether group was removed
     """
     __slots__ = ['id', 'campaignId', 'name', 'cpc', 'cpcContext', 'cpm',
-                 'status', 'maxUserDailyImpression']
+                 'status', 'maxUserDailyImpression', 'deleted']
 
 
 class Campaign(Entity):

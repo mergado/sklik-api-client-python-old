@@ -1,5 +1,4 @@
 import sys
-import unittest
 
 try:
     from gevent.local import local
@@ -8,6 +7,7 @@ except ImportError:
 
 from sklikapi.cipisek.baseclient import _create_server_proxy
 
+from . import unittest
 from . import SKLIK_CIPISEK_URL
 
 

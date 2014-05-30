@@ -1,4 +1,3 @@
-import unittest
 from datetime import datetime
 
 from sklikapi.cipisek.entities import Campaign, Keyword
@@ -6,6 +5,7 @@ from sklikapi.cipisek.campaigns import CampaignsClient
 from sklikapi.cipisek.exceptions import InvalidDataError
 from sklikapi.cipisek.marshalling import marshall_param
 
+from . import unittest
 from . import only_with_login, get_client
 
 class CampaignsTest(unittest.TestCase):
@@ -66,22 +66,30 @@ class CampaignsTest(unittest.TestCase):
         for key, val in self.campaign:
             self.assertEqual(val, getattr(from_api, key))
 
-        # 3) delete
+        # 3) list
+        existing = len(c.list_campaigns())
+        self.assertGreaterEqual(existing, 1)
+
+        # 4) delete
         c.remove_campaigns(ids)
+        existing2 = len(c.list_campaigns())
+        self.assertEqual(1, existing - existing2)
 
-        # 4) restore
+        # 5) restore
         c.restore_campaigns(ids)
+        existing3 = len(c.list_campaigns())
+        self.assertEqual(existing, existing3)
 
-        # 5) update
+        # 6) update
         campaign = Campaign(self.campaign)
         campaign.dayBudget = 20000
         campaign.id = ids[0]
         c.update_campaigns([campaign])
 
-        # 6) check equality
+        # 7) check equality
         from_api = c.get_campaigns(ids)[0]
         for key, val in campaign:
             self.assertEqual(val, getattr(from_api, key))
 
-        # 7) delete
+        # 8) delete
         c.remove_campaigns(ids)

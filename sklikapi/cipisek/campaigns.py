@@ -4,6 +4,13 @@ from .baseclient import BaseClient
 class CampaignsClient(BaseClient):
     """Sklik API ads namespace client."""
 
+    def list_campaigns(self, include_deleted=False):
+        filter = {
+            'includeDeleted': bool(include_deleted),
+        }
+        result = self._marshalled_call('campaigns.list', filter)
+        return Campaign.marshall_list(result['campaigns'])
+
     def create_campaigns(self, campaigns):
         result = self._marshalled_call('campaigns.create', list(campaigns))
         return result["campaignIds"]

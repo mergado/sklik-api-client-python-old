@@ -4,6 +4,21 @@ from .baseclient import BaseClient
 class KeywordsClient(BaseClient):
     """Sklik API keywords namespace client."""
 
+    def list_keywords(self, groups, limit=None, offset=None,
+                      positive=True, negative=True, include_deleted=False):
+        filter = {
+            'groupIds': list(groups),
+            'positiveKeywords': bool(positive),
+            'negativeKeywords': bool(negative),
+            'includeDeleted': bool(include_deleted),
+        }
+        if limit:
+            filter['limit'] = int(limit)
+        if offset:
+            filter['offset'] = int(offset)
+        result = self._marshalled_call('keywords.list', filter)
+        return Keyword.marshall_list(result['keywords'])
+
     def create_keywords(self, keywords):
         result = self._marshalled_call('keywords.create', list(keywords))
         return result["positiveKeywordIds"] + result["negativeKeywordIds"]

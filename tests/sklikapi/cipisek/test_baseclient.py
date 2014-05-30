@@ -1,8 +1,7 @@
-import unittest
-
 from sklikapi.cipisek.baseclient import BaseClient
 from sklikapi.cipisek.exceptions import IncompatibleApiVersionError, SklikApiError
 
+from . import unittest
 from . import only_with_login, get_client, SKLIK_CIPISEK_URL, SKLIK_BAJAJA_URL
 
 

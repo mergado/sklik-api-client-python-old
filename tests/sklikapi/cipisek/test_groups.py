@@ -1,4 +1,3 @@
-import unittest
 from datetime import datetime
 
 from sklikapi.cipisek.groups import GroupsClient
@@ -7,6 +6,7 @@ from sklikapi.cipisek.campaigns import CampaignsClient
 from sklikapi.cipisek.exceptions import InvalidDataError
 from sklikapi.cipisek.marshalling import marshall_param
 
+from . import unittest
 from . import only_with_login, get_client
 
 class GroupsTest(unittest.TestCase):
@@ -77,6 +77,8 @@ class GroupsTest(unittest.TestCase):
 
         # 1) create
         ids = c.create_groups([group])
+        existing = len(c.list_groups(campaigns=[campaign_id]))
+        self.assertEqual(1, existing)
 
         # 2) check equality
         from_api = c.get_groups(ids)[0]
@@ -85,9 +87,13 @@ class GroupsTest(unittest.TestCase):
 
         # 3) delete
         c.remove_groups(ids)
+        existing2 = len(c.list_groups(campaigns=[campaign_id]))
+        self.assertEqual(0, existing2)
 
         # 4) restore
         c.restore_groups(ids)
+        existing3 = len(c.list_groups(campaigns=[campaign_id]))
+        self.assertEqual(1, existing3)
 
         # 5) update
         group = Group(self.group)
