@@ -38,6 +38,11 @@ class Entity(object):
     """
     _entity_list_attributes = {}
 
+    """Attributes which can be send via entity.update method.
+    `None` means all attributes are updatable.
+    """
+    _updatable_attributes = None
+
     @classmethod
     def marshall_list(cls, src_list):
         """Converts iterable of dicts/entites to list of instances
@@ -62,7 +67,7 @@ class Entity(object):
         for key, cls in self._entity_list_attributes.items():
             val = getattr(self, key)
             if val:
-                setattr(self,key, cls.marshall_list(val))
+                setattr(self, key, cls.marshall_list(val))
 
     def __iter__(self):
         return self.iterate_non_missing()
@@ -102,11 +107,31 @@ class Entity(object):
                 for (key, val) in self.iterate_all()
                 if val != Missing)
 
+    def iterate_updatable(self):
+        """Iterate over all values which can be updated."""
+        if self._updatable_attributes is None:
+            return self.iterate_non_missing()
+        return ((key, val)
+                for (key, val) in self.iterate_all()
+                if val != Missing and key in self._updatable_attributes)
+
+    @property
+    def all_fields_missing(self):
+        """Whether all fields are equal to <Missing>."""
+        for f in self.iterate_non_missing():
+            # If at least one field is non-missing, the for cycle
+            # will execute its body. We use for, so we don't need to
+            # convert the iterator to list
+            return False
+        else:
+            return True
+
 
 class Ad(Entity):
     """Ad entity. Properties are:
     - `id`
     - `groupId` - AdGroup ID this ad belongs to
+    - `requestId` - Chosen id to identify item in response and diagnostics
     - `creative1` - ad headline
     - `creative2` - ad first line
     - `creative3` - ad second line
@@ -119,17 +144,39 @@ class Ad(Entity):
     - `deleted`
     - `deletedDate`
     """
-    __slots__ = ['id', 'groupId', 'creative1', 'creative2', 'creative3',
-                 'clickthruText', 'clickthruUrl', 'status', 'createDate',
-                 'premiseMode', 'premiseId', 'deleted', 'deletedDate']
+    __slots__ = [
+        'id', 'groupId', 'requestId', 'creative1', 'creative2', 'creative3',
+        'clickthruText', 'clickthruUrl', 'status', 'createDate', 'premiseMode',
+        'premiseId', 'deleted', 'deletedDate'
+    ]
+
+    _updatable_attributes = [
+        'id', 'creative1', 'creative2', 'creative3', 'clickthruText',
+        'clickthruUrl', 'status', 'premiseMode', 'premiseId'
+    ]
+
+    def is_same_as(self, other):
+        """Two ads are considered the same, if creative1-3
+        and clickthruText are equal
+        """
+        return (
+            self.creative1 == other.creative1
+            and self.creative2 == other.creative2
+            and self.creative3 == other.creative3
+            and self.clickthruText == other.clickthruText
+        )
 
 
 class Keyword(Entity):
     """Keyword entity.
     """
-    __slots__ = ['id', 'groupId', 'name', 'matchType', 'deleted',
-                 'status', 'disabled', 'cpc', 'url',
-                 'createDate', 'minCpc']
+    __slots__ = [
+        'id', 'groupId', 'name', 'matchType', 'deleted', 'status', 'disabled',
+        'cpc', 'url', 'createDate', 'minCpc']
+
+    _updatable_attributes = [
+        'status', 'cpc', 'url'
+    ]
 
 
 class Group(Entity):
@@ -151,22 +198,60 @@ class Group(Entity):
                         user per one day
     - bool deleted      Whether group was removed
     """
-    __slots__ = ['id', 'campaignId', 'name', 'cpc', 'cpcContext', 'cpm',
-                 'status', 'maxUserDailyImpression', 'deleted']
+    __slots__ = [
+        'id', 'campaignId', 'name', 'cpc', 'cpcContext', 'cpm', 'status',
+        'maxUserDailyImpression', 'deleted'
+    ]
+
+    _updatable_attributes = [
+        'id', 'name', 'cpc', 'cpcContext', 'cpm', 'status',
+        'maxUserDailyImpression'
+    ]
+
+
+class Vertex(Entity):
+
+    __slots__ = [
+        "latitude", "longitude"
+    ]
+
+
+class Region(Entity):
+
+    __slots__ = [
+        "type", "predefinedId", "latitude", "longitude", "radius", "vertices"
+    ]
+
+    _entity_list_attributes = {
+        "vertices": Vertex,
+    }
 
 
 class Campaign(Entity):
     """Campaign entity.
     """
-    __slots__ = ['id', 'name', 'deleted', 'status', 'dayBudget',
-                 'exhaustedDayBudget', 'adSelection', 'startDate', 'endDate',
-                 'createDate', 'fulltext', 'context', 'excludedSearchServices',
-                 'excludedUrls', 'negativeKeywords', 'userId', 'totalBudget',
-                 'exhaustedTotalBudget', 'totalClicks', 'exhaustedTotalClicks',
-                 'paymentMethod', 'regions', 'premiseId']
+    __slots__ = [
+        'id', 'name', 'deleted', 'status', 'dayBudget', 'exhaustedDayBudget',
+        'adSelection', 'startDate', 'endDate', 'createDate', 'fulltext',
+        'context', 'excludedSearchServices', 'excludedUrls',
+        'negativeKeywords', 'userId', 'totalBudget', 'exhaustedTotalBudget',
+        'totalClicks', 'exhaustedTotalClicks', 'paymentMethod', 'regions',
+        'premiseId'
+    ]
 
     _entity_list_attributes = {
         'negativeKeywords': Keyword,
+        'regions': Region,
     }
 
+    _updatable_attributes = [
+        'id', 'name', 'status', 'dayBudget', 'startDate',  'endDate',
+        'fulltext', 'context', 'excludedSearchServices', 'excludedUrls',
+        'negativeKeywords', 'totalBudget', 'totalClicks', 'paymentMethod',
+        'regions', 'premiseId'
+    ]
 
+    def __init__(self, source=None, **kwargs):
+        super(Campaign, self).__init__(source, **kwargs)
+        if self.regions is None:
+            self.regions = Missing

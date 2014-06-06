@@ -9,29 +9,30 @@ class GroupsClient(BaseClient):
             'campaignIds': list(campaigns or []),
             'includeDeleted': bool(include_deleted),
         }
-        result = self._marshalled_call('groups.list', filter)
+        result = self._call('groups.list', filter)
         return Group.marshall_list(result['groups'])
 
     def create_groups(self, groups):
-        result = self._marshalled_call('groups.create', list(groups))
+        result = self._call('groups.create', list(groups))
         return result["groupIds"]
 
-    def get_groups(self, groupIds):
-        result = self._marshalled_call('groups.get', list(groupIds))
+    def get_groups(self, group_ids):
+        result = self._call('groups.get', list(group_ids))
         return Group.marshall_list(result["groups"])
 
     def check_groups(self, groups):
-        result = self._marshalled_call('groups.check', list(groups))
+        result = self._call('groups.check', list(groups))
         return True
 
     def update_groups(self, groups):
-        result = self._marshalled_call('groups.update', list(groups))
+        groups = [dict(g.iterate_updatable()) for g in groups]
+        result = self._call('groups.update', groups)
         return True
 
-    def remove_groups(self, groupIds):
-        self._marshalled_call('groups.remove', list(groupIds))
+    def remove_groups(self, group_ids):
+        self._call('groups.remove', list(group_ids))
         return True
 
-    def restore_groups(self, groupIds):
-        self._marshalled_call('groups.restore', list(groupIds))
+    def restore_groups(self, group_ids):
+        self._call('groups.restore', list(group_ids))
         return True

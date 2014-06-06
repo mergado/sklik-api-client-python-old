@@ -8,29 +8,30 @@ class CampaignsClient(BaseClient):
         filter = {
             'includeDeleted': bool(include_deleted),
         }
-        result = self._marshalled_call('campaigns.list', filter)
+        result = self._call('campaigns.list', filter)
         return Campaign.marshall_list(result['campaigns'])
 
     def create_campaigns(self, campaigns):
-        result = self._marshalled_call('campaigns.create', list(campaigns))
+        result = self._call('campaigns.create', list(campaigns))
         return result["campaignIds"]
 
-    def get_campaigns(self, campaignIds):
-        result = self._marshalled_call('campaigns.get', list(campaignIds))
+    def get_campaigns(self, campaign_ids):
+        result = self._call('campaigns.get', list(campaign_ids))
         return Campaign.marshall_list(result["campaigns"])
 
     def check_campaigns(self, campaigns):
-        result = self._marshalled_call('campaigns.check', list(campaigns))
+        result = self._call('campaigns.check', list(campaigns))
         return True
 
     def update_campaigns(self, campaigns):
-        result = self._marshalled_call('campaigns.update', list(campaigns))
+        campaigns = [dict(c.iterate_updatable()) for c in campaigns]
+        result = self._call('campaigns.update', campaigns)
         return True
 
-    def remove_campaigns(self, campaignIds):
-        self._marshalled_call('campaigns.remove', list(campaignIds))
+    def remove_campaigns(self, campaign_ids):
+        self._call('campaigns.remove', list(campaign_ids))
         return True
 
-    def restore_campaigns(self, campaignIds):
-        self._marshalled_call('campaigns.restore', list(campaignIds))
+    def restore_campaigns(self, campaign_ids):
+        self._call('campaigns.restore', list(campaign_ids))
         return True

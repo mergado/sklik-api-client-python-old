@@ -16,29 +16,30 @@ class AdsClient(BaseClient):
             display['showCampaignId'] = True
         elif groups:
             filter['groupIds'] = list(groups)
-        result = self._marshalled_call('ads.list', filter, display)
+        result = self._call('ads.list', filter, display)
         return Ad.marshall_list(result['ads'])
 
     def create_ads(self, ads):
-        result = self._marshalled_call('ads.create', list(ads))
+        result = self._call('ads.create', list(ads))
         return result["adIds"]
 
-    def get_ads(self, adIds):
-        result = self._marshalled_call('ads.get', list(adIds))
+    def get_ads(self, ad_ids):
+        result = self._call('ads.get', list(ad_ids))
         return Ad.marshall_list(result["ads"])
 
     def check_ads(self, ads):
-        result = self._marshalled_call('ads.check', list(ads))
+        result = self._call('ads.check', list(ads))
         return True
 
     def update_ads(self, ads):
-        result = self._marshalled_call('ads.update', list(ads))
+        ads = [dict(ad.iterate_updatable()) for ad in ads]
+        result = self._call('ads.update', ads)
         return result.get('newAdIds', [])
 
-    def remove_ads(self, adIds):
-        self._marshalled_call('ads.remove', list(adIds))
+    def remove_ads(self, ad_ids):
+        self._call('ads.remove', list(ad_ids))
         return True
 
-    def restore_ads(self, adIds):
-        self._marshalled_call('ads.restore', list(adIds))
+    def restore_ads(self, ad_ids):
+        self._call('ads.restore', list(ad_ids))
         return True
