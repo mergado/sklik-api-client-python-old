@@ -20,26 +20,23 @@ class AdsClient(BaseClient):
         return Ad.marshall_list(result['ads'])
 
     def create_ads(self, ads):
-        result = self._call('ads.create', list(ads))
-        return result["adIds"]
+        return self._call('ads.create', list(ads))
+        return result
 
     def get_ads(self, ad_ids):
         result = self._call('ads.get', list(ad_ids))
         return Ad.marshall_list(result["ads"])
 
     def check_ads(self, ads):
-        result = self._call('ads.check', list(ads))
-        return True
+        return self._call('ads.check', list(ads))
+        return result
 
     def update_ads(self, ads):
         ads = [dict(ad.iterate_updatable()) for ad in ads]
-        result = self._call('ads.update', ads)
-        return result.get('newAdIds', [])
+        return self._call('ads.update', ads)
 
     def remove_ads(self, ad_ids):
-        self._call('ads.remove', list(ad_ids))
-        return True
+        return self._call('ads.remove', list(ad_ids))
 
     def restore_ads(self, ad_ids):
-        self._call('ads.restore', list(ad_ids))
-        return True
+        return self._call('ads.restore', list(ad_ids))

@@ -28,18 +28,14 @@ class KeywordsClient(BaseClient):
         return Keyword.marshall_list(result["keywords"])
 
     def check_keywords(self, keywords):
-        self._call('keywords.check', list(keywords))
-        return True
+        return self._call('keywords.check', list(keywords))
 
     def update_keywords(self, keywords):
         keywords = [dict(kw.iterate_updatable()) for kw in keywords]
-        self._call('keywords.update', keywords)
-        return True
+        return self._call('keywords.update', keywords)
 
     def remove_keywords(self, keyword_ids):
-        self._call('keywords.remove', list(keyword_ids))
-        return True
+        return self._call('keywords.remove', list(keyword_ids))
 
     def restore_keywords(self, keyword_ids):
-        self._call('keywords.restore', list(keyword_ids))
-        return True
+        return self._call('keywords.restore', list(keyword_ids))

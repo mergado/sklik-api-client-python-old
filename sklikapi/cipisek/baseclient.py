@@ -1,5 +1,6 @@
 import sys
 import errno
+import socket
 import logging
 from httplib import HTTPSConnection, HTTPS
 from warnings import warn
@@ -7,7 +8,6 @@ from xmlrpclib import ServerProxy, Transport
 
 from .exceptions import *
 from .marshalling import marshall_param, marshall_result
-from .utils import split_every
 
 
 _logger = logging.getLogger('sklikapi')
@@ -30,23 +30,28 @@ class TimeoutHTTPS(HTTPS):
 
 class TimeoutTransport(Transport):
 
-    def __init__(self, timeout=10, *args, **kwargs):
+    def __init__(self, timeout=socket._GLOBAL_DEFAULT_TIMEOUT, *args, **kwargs):
         self.timeout = timeout
+        self._connection = (None, None)
         Transport.__init__(self, *args, **kwargs)
 
     def make_connection(self, host):
-        conn = TimeoutHTTPS(host)
-        conn.set_timeout(self.timeout)
-        return conn
+        chost, self._extra_headers, x509 = self.get_host_info(host)
+        self._connection = host, TimeoutHTTPS(chost, None, **(x509 or {}))
+        self._connection[1].set_timeout(self.timeout)
+        return self._connection[1]
+
 
 class TimeoutServerProxy(ServerProxy):
 
-    def __init__(self, uri, timeout=10, *args, **kwargs):
-        kwargs['transport'] = TimeoutTransport(
+    def __init__(self, uri, timeout=socket._GLOBAL_DEFAULT_TIMEOUT, *args, **kwargs):
+        self.__transport = TimeoutTransport(
             timeout=timeout,
             use_datetime=kwargs.get('use_datetime', 0)
         )
+        kwargs['transport'] = self.__transport
         ServerProxy.__init__(self, uri, *args, **kwargs)
+
 
 
 # gevent compatibility
@@ -169,15 +174,19 @@ class BaseClient(object):
 
             except IOError as e:
                 if 'timed out' in e.args[0]:
-                    if n > self.retries:
+                    if n >= self.retries:
                         raise
                     else:
                         _logger.info('Timeout! Retrying.')
                 else:
                     raise
 
+            except InvalidDataError:
+                # in fact not-an-error
+                raise
+
             except SklikApiError as e:
-                if n > self.retries:
+                if n >= self.retries:
                     raise
                 else:
                     _logger.info('%s! Retrying.', str(e))
@@ -207,11 +216,8 @@ class BaseClient(object):
             raise AccessError(res["statusMessage"])
         elif res["status"] == 404:
             raise NotFoundError(res["statusMessage"])
-        elif res["status"] == 406:
+        elif res["status"] in [206, 406]:
             raise InvalidDataError(res["status"], res.get("diagnostics"))
-        elif res["status"] == 206:
-            warn(res["statusMessage"], SklikApiWarning)
-            return
         elif res["status"] == 409:
             warn(res["statusMessage"], NoActionWarning)
         else:
