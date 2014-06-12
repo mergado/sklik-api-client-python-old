@@ -183,7 +183,7 @@ class BaseClient(object):
             except SklikApiError as e:
                 match = re.match(r'Too many requests. Has to wait ([0-9]+)\[s\].', str(e))
                 if match:
-                    wait = int(match.group(1))
+                    wait = int(match.group(1)) + 1
                     time.sleep(wait)
                 elif n >= self.retries:
                     raise
