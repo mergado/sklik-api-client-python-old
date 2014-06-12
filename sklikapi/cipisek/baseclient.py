@@ -173,7 +173,8 @@ class BaseClient(object):
                 return result
 
             except IOError as e:
-                if 'timed out' in e.args[0]:
+                if (isinstance(e.args[0], basestring)
+                    and 'timed out' in e.args[0]):
                     if n >= self.retries:
                         raise
                     else:
