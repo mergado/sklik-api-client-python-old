@@ -1,4 +1,6 @@
+import re
 import sys
+import time
 import errno
 import socket
 import logging
@@ -172,8 +174,18 @@ class BaseClient(object):
                 self._check_result(result)
                 return result
 
-            except (IOError, SklikApiError) as e:
+            except IOError as e:
                 if n >= self.retries:
+                    raise
+                else:
+                    _logger.info('%s! Retrying.', str(e))
+
+            except SklikApiError as e:
+                match = re.match(r'Too many requests. Has to wait ([0-9]+)\[s\].', str(e))
+                if match:
+                    wait = int(match.group(1))
+                    time.sleep(wait)
+                elif n >= self.retries:
                     raise
                 else:
                     _logger.info('%s! Retrying.', str(e))
@@ -208,8 +220,10 @@ class BaseClient(object):
         elif res["status"] == 404:
             raise NotFoundError(res["statusMessage"])
         elif res["status"] in [206, 406]:
+            print "invalid", res
             raise InvalidDataError(res["status"], res.get("diagnostics"))
         elif res["status"] == 409:
             warn(res["statusMessage"], NoActionWarning)
         else:
+            print res
             raise SklikApiError(res["statusMessage"])
