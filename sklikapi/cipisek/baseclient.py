@@ -172,25 +172,15 @@ class BaseClient(object):
                 self._check_result(result)
                 return result
 
-            except IOError as e:
-                if (isinstance(e.args[0], basestring)
-                    and 'timed out' in e.args[0]):
-                    if n >= self.retries:
-                        raise
-                    else:
-                        _logger.info('Timeout! Retrying.')
-                else:
-                    raise
-
-            except InvalidDataError:
-                # in fact not-an-error
-                raise
-
-            except SklikApiError as e:
+            except (IOError, SklikApiError) as e:
                 if n >= self.retries:
                     raise
                 else:
                     _logger.info('%s! Retrying.', str(e))
+
+            except InvalidDataError:
+                # in fact not-an-error
+                raise
 
     def _call(self, *args, **kwargs):
         return self._marshall_and_call(*args, **kwargs)
