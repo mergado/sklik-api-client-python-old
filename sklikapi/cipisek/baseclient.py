@@ -220,10 +220,8 @@ class BaseClient(object):
         elif res["status"] == 404:
             raise NotFoundError(res["statusMessage"])
         elif res["status"] in [206, 406]:
-            print "invalid", res
             raise InvalidDataError(res["status"], res.get("diagnostics"))
         elif res["status"] == 409:
             warn(res["statusMessage"], NoActionWarning)
         else:
-            print res
             raise SklikApiError(res["statusMessage"])
