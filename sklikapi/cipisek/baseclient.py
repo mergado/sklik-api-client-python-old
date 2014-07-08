@@ -103,9 +103,7 @@ class BaseClient(object):
             )
 
         self.__auth = (username, password)
-        res = self._proxy.client.login(*auth)
-        self._check_login_result(res)
-        self.__session = res["session"]
+        self._login()
 
         # load limits
         limits = self.get_limits()
@@ -123,7 +121,7 @@ class BaseClient(object):
         self._check_login_result(res)
 
     def _login(self):
-        res = self._proxy.client.login(*auth)
+        res = self._proxy.client.login(*self.__auth)
         self._check_login_result(res)
         self.__session = res["session"]
 
