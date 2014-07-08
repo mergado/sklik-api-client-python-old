@@ -102,7 +102,8 @@ class BaseClient(object):
                 'Only API version "cipisek" is supported.'
             )
 
-        res = self._proxy.client.login(username, password)
+        self.__auth = (username, password)
+        res = self._proxy.client.login(*auth)
         self._check_login_result(res)
         self.__session = res["session"]
 
@@ -120,6 +121,11 @@ class BaseClient(object):
 
         res = self._proxy.client.logout({'session': self.__session})
         self._check_login_result(res)
+
+    def _login(self):
+        res = self._proxy.client.login(*auth)
+        self._check_login_result(res)
+        self.__session = res["session"]
 
     def get_batch_limit(self, operation):
         if operation in self.batch_limits:
@@ -174,11 +180,22 @@ class BaseClient(object):
                 self._check_result(result)
                 return result
 
+            except InvalidDataError:
+                # in fact not-an-error
+                raise
+
             except IOError as e:
                 if n >= self.retries:
                     raise
                 else:
                     _logger.info('%s! Retrying.', str(e))
+
+            except SessionError as e:
+                _logger.info('%s! Re-logging in and retrying.', str(e))
+                if n >= self.retries:
+                    raise
+                else:
+                    self._login()
 
             except SklikApiError as e:
                 match = re.match(r'Too many requests. Has to wait ([0-9]+)\[s\].', str(e))
@@ -189,10 +206,6 @@ class BaseClient(object):
                     raise
                 else:
                     _logger.info('%s! Retrying.', str(e))
-
-            except InvalidDataError:
-                # in fact not-an-error
-                raise
 
     def _call(self, *args, **kwargs):
         return self._marshall_and_call(*args, **kwargs)
