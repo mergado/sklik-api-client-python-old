@@ -4,6 +4,8 @@ import time
 import errno
 import socket
 import logging
+import traceback
+
 from httplib import HTTPSConnection, HTTPS
 from warnings import warn
 from xmlrpclib import ServerProxy, Transport
@@ -71,6 +73,9 @@ def _create_server_proxy(*args, **kwargs):
 
 class BaseClient(object):
     """Sklik abstract client base class."""
+
+    # How long to wait before re-logging in when session expires (in seconds)
+    MALFORMED_SESSION_WAIT = 5
 
     def __init__(self, url, username, password, debug=False, timeout=None,
                  retries=0):
@@ -193,6 +198,7 @@ class BaseClient(object):
                 if n >= self.retries:
                     raise
                 else:
+                    time.sleep(self.MALFORMED_SESSION_WAIT)
                     self._login()
 
             except SklikApiError as e:
