@@ -6,6 +6,8 @@ import socket
 import logging
 import traceback
 
+from pprint import pprint
+
 from httplib import HTTPSConnection, HTTPS
 from warnings import warn
 from xmlrpclib import ServerProxy, Transport
@@ -20,30 +22,24 @@ _logger = logging.getLogger('sklikapi')
 class TimeoutHTTPSConnection(HTTPSConnection):
 
    def connect(self):
-       HTTPSConnection.connect(self)
-       self.sock.settimeout(self.timeout)
-
-
-class TimeoutHTTPS(HTTPS):
-
-   _connection_class = TimeoutHTTPSConnection
-
-   def set_timeout(self, timeout):
-       self._conn.timeout = timeout
+        HTTPSConnection.connect(self)
+        if self.timeout:
+            self.sock.settimeout(self.timeout)
 
 
 class TimeoutTransport(Transport):
 
     def __init__(self, timeout=socket._GLOBAL_DEFAULT_TIMEOUT, *args, **kwargs):
         self.timeout = timeout
-        self._connection = (None, None)
+        self.conn = None
         Transport.__init__(self, *args, **kwargs)
 
     def make_connection(self, host):
-        chost, self._extra_headers, x509 = self.get_host_info(host)
-        self._connection = host, TimeoutHTTPS(chost, None, **(x509 or {}))
-        self._connection[1].set_timeout(self.timeout)
-        return self._connection[1]
+        if not self.conn:
+            host, extra_headers, x509 = self.get_host_info(host)
+            self.conn = TimeoutHTTPSConnection(host)
+            self.conn.timeout = self.timeout
+        return self.conn
 
 
 class TimeoutServerProxy(ServerProxy):
@@ -55,7 +51,6 @@ class TimeoutServerProxy(ServerProxy):
         )
         kwargs['transport'] = self.__transport
         ServerProxy.__init__(self, uri, *args, **kwargs)
-
 
 
 # gevent compatibility
