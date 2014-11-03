@@ -8,9 +8,8 @@ import traceback
 
 from pprint import pprint
 
-from httplib import HTTPSConnection, HTTPS
 from warnings import warn
-from xmlrpclib import ServerProxy, Transport
+from xmlrpclib import ServerProxy
 
 from .exceptions import *
 from .marshalling import marshall_param, marshall_result
@@ -19,51 +18,17 @@ from .marshalling import marshall_param, marshall_result
 _logger = logging.getLogger('sklikapi')
 
 
-class TimeoutHTTPSConnection(HTTPSConnection):
-
-   def connect(self):
-        HTTPSConnection.connect(self)
-        if self.timeout:
-            self.sock.settimeout(self.timeout)
-
-
-class TimeoutTransport(Transport):
-
-    def __init__(self, timeout=socket._GLOBAL_DEFAULT_TIMEOUT, *args, **kwargs):
-        self.timeout = timeout
-        self.conn = None
-        Transport.__init__(self, *args, **kwargs)
-
-    def make_connection(self, host):
-        if not self.conn:
-            host, extra_headers, x509 = self.get_host_info(host)
-            self.conn = TimeoutHTTPSConnection(host)
-            self.conn.timeout = self.timeout
-        return self.conn
-
-
-class TimeoutServerProxy(ServerProxy):
-
-    def __init__(self, uri, timeout=socket._GLOBAL_DEFAULT_TIMEOUT, *args, **kwargs):
-        self.__transport = TimeoutTransport(
-            timeout=timeout,
-            use_datetime=kwargs.get('use_datetime', 0)
-        )
-        kwargs['transport'] = self.__transport
-        ServerProxy.__init__(self, uri, *args, **kwargs)
-
-
 # gevent compatibility
 def _create_server_proxy(*args, **kwargs):
     if 'gevent' in sys.modules:
         from gevent.local import local
-        class GeventServerProxy(TimeoutServerProxy, local):
-            """Subclass of :class:`TimeoutServerProxy` where each
+        class GeventServerProxy(ServerProxy, local):
+            """Subclass of :class:`ServerProxy` where each
             instance is used across all greenlets."""
         return GeventServerProxy(*args, **kwargs)
 
     else:
-        return TimeoutServerProxy(*args, **kwargs)
+        return ServerProxy(*args, **kwargs)
 
 
 class BaseClient(object):
@@ -80,7 +45,7 @@ class BaseClient(object):
         :param username: Sklik login
         :param password: Sklik user password
         :param debug: Use XML-RPC verbose mode
-        :param timeout: Timeout (in seconds) for XML-RPC calls
+        :param timeout: Currently not implemented
         :param retries: Number of retries in the case of timeout or
                         ServerError
         """
@@ -90,8 +55,7 @@ class BaseClient(object):
         if not username or not password:
             raise Exception('Username and password must not be empty')
 
-        self._proxy = _create_server_proxy(url, verbose=debug, allow_none=True,
-                                           timeout=timeout)
+        self._proxy = _create_server_proxy(url, verbose=debug, allow_none=True)
         self.retries = retries
 
         versionName, versionNumber = self.get_version()
