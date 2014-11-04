@@ -9,7 +9,7 @@ import traceback
 from pprint import pprint
 
 from warnings import warn
-from xmlrpclib import ServerProxy
+from xmlrpclib import ServerProxy, ProtocolError
 
 from .exceptions import *
 from .marshalling import marshall_param, marshall_result
@@ -36,6 +36,9 @@ class BaseClient(object):
 
     # How long to wait before re-logging in when session expires (in seconds)
     MALFORMED_SESSION_WAIT = 5
+
+    # How long to wait before retry when IOError/ProtocolError occurs (in seconds)
+    ERROR_RETRY_WAIT = 5
 
     def __init__(self, url, username, password, debug=False, timeout=None,
                  retries=0):
@@ -146,10 +149,11 @@ class BaseClient(object):
                 # in fact not-an-error
                 raise
 
-            except IOError as e:
+            except (ProtocolError, IOError) as e:
                 if n >= self.retries:
                     raise
                 else:
+                    time.sleep(self.ERROR_RETRY_WAIT)
                     _logger.info('%s! Retrying.', str(e))
 
             except SessionError as e:
