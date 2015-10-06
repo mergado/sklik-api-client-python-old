@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='sklikapi',
-    version='2.0.0-dev',
+    version='2.0.2',
     author='Eduard Veleba, Michal Wiglasz, Pavel Dedik',
     description=('Python library for easier access to the Sklik.cz API,'
                  'a pay-per-click advertising system, operated by Seznam.cz.'),
