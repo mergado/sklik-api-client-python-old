@@ -1,6 +1,7 @@
 from .entities import Group
 from .baseclient import BaseClient
 
+
 class GroupsClient(BaseClient):
     """Sklik API groups namespace client."""
 
@@ -21,12 +22,12 @@ class GroupsClient(BaseClient):
         return Group.marshall_list(result["groups"])
 
     def check_groups(self, groups):
-        result = self._call('groups.check', list(groups))
+        self._call('groups.check', list(groups))
         return True
 
     def update_groups(self, groups):
         groups = [dict(g.iterate_updatable()) for g in groups]
-        result = self._call('groups.update', groups)
+        self._call('groups.update', groups)
         return True
 
     def remove_groups(self, group_ids):

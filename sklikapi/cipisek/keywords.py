@@ -1,6 +1,7 @@
 from .entities import Keyword
 from .baseclient import BaseClient
 
+
 class KeywordsClient(BaseClient):
     """Sklik API keywords namespace client."""
 

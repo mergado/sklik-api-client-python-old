@@ -1,17 +1,12 @@
 import re
 import sys
 import time
-import errno
-import socket
 import logging
-import traceback
-
-from pprint import pprint
 
 from warnings import warn
 from xmlrpclib import ServerProxy, ProtocolError
 
-from .exceptions import *
+from . import exceptions as exc
 from .marshalling import marshall_param, marshall_result
 
 
@@ -22,6 +17,7 @@ _logger = logging.getLogger('sklikapi')
 def _create_server_proxy(*args, **kwargs):
     if 'gevent' in sys.modules:
         from gevent.local import local
+
         class GeventServerProxy(ServerProxy, local):
             """Subclass of :class:`ServerProxy` where each
             instance is used across all greenlets."""
@@ -65,7 +61,7 @@ class BaseClient(object):
         _logger.debug('Sklik API version %s %s', versionName, versionNumber)
 
         if versionName != 'cipisek':
-            raise IncompatibleApiVersionError(
+            raise exc.IncompatibleApiVersionError(
                 'Only API version "cipisek" is supported.'
             )
 
@@ -81,7 +77,7 @@ class BaseClient(object):
     def __del__(self):
         """Logs out."""
 
-        if self.__session == None:
+        if self.__session is None:
             return
 
         res = self._proxy.client.logout({'session': self.__session})
@@ -145,7 +141,7 @@ class BaseClient(object):
                 self._check_result(result)
                 return result
 
-            except InvalidDataError:
+            except exc.InvalidDataError:
                 # in fact not-an-error
                 raise
 
@@ -156,7 +152,7 @@ class BaseClient(object):
                     time.sleep(self.ERROR_RETRY_WAIT)
                     _logger.info('%s! Retrying.', str(e))
 
-            except SessionError as e:
+            except exc.SessionError as e:
                 _logger.info('%s! Re-logging in and retrying.', str(e))
                 if n >= self.retries:
                     raise
@@ -164,8 +160,9 @@ class BaseClient(object):
                     time.sleep(self.MALFORMED_SESSION_WAIT)
                     self._login()
 
-            except SklikApiError as e:
-                match = re.match(r'Too many requests. Has to wait ([0-9]+)\[s\].', str(e))
+            except exc.SklikApiError as e:
+                match = re.match(
+                    r'Too many requests. Has to wait ([0-9]+)\[s\].', str(e))
                 if match:
                     wait = int(match.group(1)) + 1
                     time.sleep(wait)
@@ -179,11 +176,11 @@ class BaseClient(object):
 
     def _check_login_result(self, res):
         if res["status"] == 400:
-            raise ArgumentError(res["statusMessage"], res["problems"])
+            raise exc.ArgumentError(res["statusMessage"], res["problems"])
         elif res["status"] in [301, 401]:
-            raise AuthenticationError(res["statusMessage"])
+            raise exc.AuthenticationError(res["statusMessage"])
         elif res["status"] != 200:
-            raise SklikApiError(res["statusMessage"])
+            raise exc.SklikApiError(res["statusMessage"])
 
     def _check_result(self, res):
         if "session" in res:
@@ -192,16 +189,17 @@ class BaseClient(object):
         if res["status"] == 200:
             return
         elif res["status"] == 400:
-            raise ArgumentError(res["statusMessage"], res.get("diagnostics"))
+            raise exc.ArgumentError(res["statusMessage"],
+                                    res.get("diagnostics"))
         elif res["status"] == 401:
-            raise SessionError(res["statusMessage"])
+            raise exc.SessionError(res["statusMessage"])
         elif res["status"] == 403:
-            raise AccessError(res["statusMessage"])
+            raise exc.AccessError(res["statusMessage"])
         elif res["status"] == 404:
-            raise NotFoundError(res["statusMessage"])
+            raise exc.NotFoundError(res["statusMessage"])
         elif res["status"] in [206, 406]:
-            raise InvalidDataError(res["status"], res.get("diagnostics"))
+            raise exc.InvalidDataError(res["status"], res.get("diagnostics"))
         elif res["status"] == 409:
-            warn(res["statusMessage"], NoActionWarning)
+            warn(res["statusMessage"], exc.NoActionWarning)
         else:
-            raise SklikApiError(res["statusMessage"])
+            raise exc.SklikApiError(res["statusMessage"])

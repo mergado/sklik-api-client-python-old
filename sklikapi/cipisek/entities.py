@@ -80,7 +80,7 @@ class Entity(object):
                 return False
         return True
 
-    def  __ne__(self, other):
+    def __ne__(self, other):
         return not self.__eq__(other)
 
     def __repr__(self):

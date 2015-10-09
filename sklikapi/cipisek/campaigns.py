@@ -1,6 +1,7 @@
 from .entities import Campaign
 from .baseclient import BaseClient
 
+
 class CampaignsClient(BaseClient):
     """Sklik API ads namespace client."""
 
@@ -20,12 +21,12 @@ class CampaignsClient(BaseClient):
         return Campaign.marshall_list(result["campaigns"])
 
     def check_campaigns(self, campaigns):
-        result = self._call('campaigns.check', list(campaigns))
+        self._call('campaigns.check', list(campaigns))
         return True
 
     def update_campaigns(self, campaigns):
         campaigns = [dict(c.iterate_updatable()) for c in campaigns]
-        result = self._call('campaigns.update', campaigns)
+        self._call('campaigns.update', campaigns)
         return True
 
     def remove_campaigns(self, campaign_ids):

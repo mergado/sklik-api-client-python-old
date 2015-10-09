@@ -2,10 +2,10 @@ from time import strptime
 from types import GeneratorType
 from datetime import datetime
 from itertools import imap
-from functools import partial, wraps
+from functools import wraps
 from xmlrpclib import DateTime
 
-from .entities import Missing, Entity
+from .entities import Entity
 
 
 def marshall_param(data):
@@ -40,14 +40,12 @@ def marshall_param(data):
 
 
 def marshall_result(data, obj_type=None):
-    """
-    Lists and tuples are kept, generators are wrapped by
+    """Lists and tuples are kept, generators are wrapped by
     `itertools.imap`, `xmlrpclib.DateTime` objects are converted to
     `datetime.datetime`. Dicts are kept unless `obj_type` is set, in
     which case dicts are converted to `obj_type` instances.
     Other data types are left as-is.
     """
-
     recursion = lambda data: marshall_result(data, obj_type)
 
     if obj_type and isinstance(data, dict):
@@ -56,8 +54,7 @@ def marshall_result(data, obj_type=None):
         return obj_type(**kwargs)
 
     elif isinstance(data, dict):
-        return dict((k, recursion(v))
-                      for (k, v) in data.iteritems())
+        return dict((k, recursion(v)) for (k, v) in data.iteritems())
 
     elif isinstance(data, list):
         return map(recursion, data)
@@ -79,7 +76,6 @@ def marshall(obj_type=None):
     """Decorator which automatically marshalles arguments and function
     result using `marshall_param` and `marshall_result` functions.
     """
-
     def wrapper(func):
         @wraps(func)
         def marshaller(*args, **kwargs):

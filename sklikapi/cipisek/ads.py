@@ -1,6 +1,7 @@
 from .entities import Ad
 from .baseclient import BaseClient
 
+
 class AdsClient(BaseClient):
     """Sklik API ads namespace client."""
 
@@ -21,7 +22,6 @@ class AdsClient(BaseClient):
 
     def create_ads(self, ads):
         return self._call('ads.create', list(ads))
-        return result
 
     def get_ads(self, ad_ids):
         result = self._call('ads.get', list(ad_ids))
@@ -29,7 +29,6 @@ class AdsClient(BaseClient):
 
     def check_ads(self, ads):
         return self._call('ads.check', list(ads))
-        return result
 
     def update_ads(self, ads):
         ads = [dict(ad.iterate_updatable()) for ad in ads]
