@@ -21,7 +21,10 @@ class KeywordsClient(BaseClient):
         return Keyword.marshall_list(result['keywords'])
 
     def create_keywords(self, keywords):
-        result = self._call('keywords.create', list(keywords))
+        result = {}
+        chunks = [keywords[x:x+100] for x in xrange(0, len(keywords), 100)]
+        for chunk in chunks:
+            result.update(self._call('keywords.create', chunk))
         return result["positiveKeywordIds"] + result["negativeKeywordIds"]
 
     def get_keywords(self, keyword_ids):
